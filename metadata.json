@@ -1,6 +1,6 @@
 {
-  "name": "MV Jayanna — Software Engineer Portfolio",
-  "description": "High-end creative portfolio for MV Jayanna, full-stack software engineer specializing in modern web applications, scalable backends, and cryptographic systems.",
-  "requestFramePermissions": [],
+  "name": "QuickShift — Instant Nearby Part-Time Jobs",
+  "description": "Platform connecting city newcomers and job seekers with instant nearby part-time jobs in retail stores (Trends, Zudio), fast food (KFC, Domino's), supermarkets, delivery, and malls with WhatsApp hiring and AI matching.",
+  "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

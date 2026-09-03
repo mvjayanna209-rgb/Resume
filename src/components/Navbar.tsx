@@ -1,327 +1,273 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState } from 'react';
 import { 
-  Menu, 
-  X, 
-  FileText, 
-  Terminal, 
+  Zap, 
+  MapPin, 
+  Navigation, 
+  Sparkles, 
+  QrCode, 
   Volume2, 
   VolumeX, 
-  Clock, 
-  Sparkles,
-  ArrowUpRight,
-  Github
+  Smartphone, 
+  Monitor, 
+  User, 
+  Briefcase, 
+  ShieldCheck,
+  ChevronDown
 } from 'lucide-react';
-import { PERSONAL_INFO } from '../data/portfolioData';
+import { UserRole, IndianCity } from '../types';
+import { CITIES_CONFIG } from '../data/mockJobs';
 import { playPopSound, toggleSound, isSoundEnabled } from '../utils/audio';
-import ProfilePhoto from './ProfilePhoto';
 
 interface NavbarProps {
-  onOpenResume: () => void;
-  onOpenCommand: () => void;
+  currentRole: UserRole;
+  onChangeRole: (role: UserRole) => void;
+  currentCity: IndianCity;
+  onChangeCity: (city: IndianCity) => void;
+  currentLocality: string;
+  onChangeLocality: (locality: string) => void;
+  onOpenAIMatcher: () => void;
+  onOpenDigitalPass: () => void;
+  onOpenProfile: () => void;
+  appliedCount: number;
+  isMobileFrame: boolean;
+  onToggleMobileFrame: () => void;
 }
 
-export default function Navbar({ onOpenResume, onOpenCommand }: NavbarProps) {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [soundActive, setSoundActive] = useState(isSoundEnabled());
-  const [timeString, setTimeString] = useState('');
-  const [activeSection, setActiveSection] = useState('hero');
-
-  // Live IST (Karnataka) clock
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const options: Intl.DateTimeFormatOptions = {
-        timeZone: 'Asia/Kolkata',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      };
-      setTimeString(now.toLocaleTimeString('en-US', options) + ' IST');
-    };
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Track scroll position
-  useEffect(() => {
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 30;
-      setScrolled(isScrolled);
-
-      // Section tracking
-      const sections = ['hero', 'about', 'projects', 'experience', 'skills', 'services', 'contact'];
-      const scrollPos = window.scrollY + 200;
-
-      for (const section of sections) {
-        const el = document.getElementById(section);
-        if (el) {
-          const top = el.offsetTop;
-          const height = el.offsetHeight;
-          if (scrollPos >= top && scrollPos < top + height) {
-            setActiveSection(section);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+export default function Navbar({
+  currentRole,
+  onChangeRole,
+  currentCity,
+  onChangeCity,
+  currentLocality,
+  onChangeLocality,
+  onOpenAIMatcher,
+  onOpenDigitalPass,
+  onOpenProfile,
+  appliedCount,
+  isMobileFrame,
+  onToggleMobileFrame,
+}: NavbarProps) {
+  const [soundOn, setSoundOn] = useState(isSoundEnabled());
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
 
   const handleSoundToggle = () => {
-    const newState = toggleSound();
-    setSoundActive(newState);
-    if (newState) playPopSound(700, 0.08);
+    const nextState = toggleSound();
+    setSoundOn(nextState);
+    if (nextState) playPopSound(700, 0.05);
   };
 
-  const navLinks = [
-    { label: 'About', href: '#about', id: 'about' },
-    { label: 'Work', href: '#projects', id: 'projects' },
-    { label: 'Experience', href: '#experience', id: 'experience' },
-    { label: 'Skills', href: '#skills', id: 'skills' },
-    { label: 'Services', href: '#services', id: 'services' },
-    { label: 'Contact', href: '#contact', id: 'contact' },
-  ];
+  const handleRoleClick = (role: UserRole) => {
+    playPopSound(600, 0.04);
+    onChangeRole(role);
+  };
 
-  const handleNavClick = (href: string) => {
-    playPopSound(500, 0.03);
-    setMobileMenuOpen(false);
-    const target = document.querySelector(href);
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
-    }
+  const handleCitySelect = (city: IndianCity) => {
+    playPopSound(550, 0.04);
+    onChangeCity(city);
+    const firstLocality = CITIES_CONFIG[city]?.localities[0] || '';
+    onChangeLocality(firstLocality);
+    setShowCityDropdown(false);
   };
 
   return (
-    <header 
-      id="main-navbar" 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled 
-          ? 'py-3 bg-[#08090d]/85 backdrop-blur-xl border-b border-white/10 shadow-2xl shadow-black/60' 
-          : 'py-6 bg-transparent'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
-          
-          {/* Brand Monogram & Name */}
-          <a 
-            href="#hero" 
-            onClick={() => handleNavClick('#hero')}
-            className="flex items-center gap-3 group focus:outline-none"
-            id="nav-brand-link"
+    <header className="sticky top-0 z-40 w-full bg-zinc-950/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+        {/* Brand Logo */}
+        <div className="flex items-center gap-3">
+          <div 
+            onClick={() => handleRoleClick('seeker')}
+            className="flex items-center gap-2 cursor-pointer group"
           >
-            <div className="relative">
-              <ProfilePhoto size="sm" rounded="2xl" showStatus={true} interactive={false} borderGlow={false} />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-400 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform">
+              <Zap className="w-5 h-5 fill-white" />
             </div>
-
             <div className="flex flex-col">
-              <span className="font-display font-bold text-white text-sm sm:text-base tracking-tight group-hover:text-sky-300 transition-colors">
-                {PERSONAL_INFO.name}
-              </span>
-              <span className="text-[11px] font-mono text-zinc-400 tracking-wide flex items-center gap-1.5">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                Available for Roles
+              <div className="flex items-center gap-1.5">
+                <span className="font-display font-black text-xl text-white tracking-tight">
+                  Quick<span className="text-sky-400">Shift</span>
+                </span>
+                <span className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-950 border border-sky-500/30 text-sky-300 font-semibold uppercase">
+                  Part-Time
+                </span>
+              </div>
+              <span className="text-[10px] text-zinc-400 font-mono hidden md:inline">
+                Instant Walk-in Shifts for Newcomers
               </span>
             </div>
-          </a>
+          </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-full bg-zinc-900/60 backdrop-blur-md border border-white/10 shadow-inner">
-            {navLinks.map((link) => {
-              const isActive = activeSection === link.id;
-              return (
-                <a
-                  key={link.id}
-                  href={link.href}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavClick(link.href);
-                  }}
-                  className={`relative px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-medium transition-all duration-200 ${
-                    isActive 
-                      ? 'text-white' 
-                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
-                  }`}
-                  id={`nav-link-${link.id}`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeNavPill"
-                      className="absolute inset-0 bg-white/10 rounded-full border border-white/15"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                  <span className="relative z-10">{link.label}</span>
-                </a>
-              );
-            })}
-          </nav>
+          {/* City & Locality Selector */}
+          <div className="relative">
+            <button
+              onClick={() => setShowCityDropdown(!showCityDropdown)}
+              className="px-3 py-1.5 rounded-xl bg-zinc-900 border border-white/10 hover:border-white/20 text-xs font-semibold text-zinc-200 flex items-center gap-1.5 transition-colors"
+            >
+              <MapPin className="w-3.5 h-3.5 text-rose-400" />
+              <span>{currentCity}</span>
+              <ChevronDown className="w-3 h-3 text-zinc-500" />
+            </button>
 
-          {/* Right Utilities: Clock, Audio, Command Menu, Resume */}
-          <div className="hidden lg:flex items-center gap-3">
-            {/* Live Clock Indicator */}
-            {timeString && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900/50 border border-white/5 text-[11px] font-mono text-zinc-400" title="Local Time in Karnataka, India">
-                <Clock className="w-3 h-3 text-sky-400" />
-                <span>{timeString}</span>
+            {showCityDropdown && (
+              <div className="absolute top-full left-0 mt-2 w-48 rounded-2xl bg-zinc-900 border border-white/15 p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="text-[10px] font-mono uppercase text-zinc-500 px-2 py-1">
+                  Select Active City
+                </div>
+                {(Object.keys(CITIES_CONFIG) as IndianCity[]).map((city) => (
+                  <button
+                    key={city}
+                    onClick={() => handleCitySelect(city)}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between ${
+                      city === currentCity
+                        ? 'bg-sky-500/20 text-sky-300 font-bold'
+                        : 'text-zinc-300 hover:bg-zinc-800'
+                    }`}
+                  >
+                    <span>{city}</span>
+                    <span className="text-[10px] text-zinc-500 font-mono">
+                      {CITIES_CONFIG[city].state}
+                    </span>
+                  </button>
+                ))}
               </div>
             )}
-
-            {/* Sound FX Toggle */}
-            <button
-              onClick={handleSoundToggle}
-              className={`p-2 rounded-full border transition-all duration-200 ${
-                soundActive 
-                  ? 'bg-sky-500/10 border-sky-500/40 text-sky-400' 
-                  : 'bg-zinc-900/50 border-white/10 text-zinc-400 hover:text-white'
-              }`}
-              title={soundActive ? "Mute interactive audio feedback" : "Enable subtle interaction sound effects"}
-              aria-label="Sound Toggle"
-              id="nav-sound-toggle"
-            >
-              {soundActive ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-            </button>
-
-            {/* Command Palette Trigger */}
-            <button
-              onClick={() => {
-                playPopSound(600, 0.04);
-                onOpenCommand();
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900/60 border border-white/10 text-xs text-zinc-400 hover:text-white hover:border-white/20 transition-all duration-200"
-              title="Open Command Palette (Cmd + K)"
-              id="nav-command-btn"
-            >
-              <Terminal className="w-3.5 h-3.5 text-sky-400" />
-              <span className="font-mono text-[11px]">⌘K</span>
-            </button>
-
-            {/* GitHub Profile Icon Button */}
-            <a
-              href={PERSONAL_INFO.github}
-              target="_blank"
-              rel="noreferrer"
-              className="p-2 rounded-full bg-zinc-900/50 border border-white/10 text-zinc-400 hover:text-white hover:border-white/30 transition-all duration-200"
-              title="View GitHub Profile (mvjayanna209)"
-              aria-label="GitHub Profile"
-              id="nav-github-btn"
-            >
-              <Github className="w-3.5 h-3.5" />
-            </a>
-
-            {/* Resume Button */}
-            <button
-              onClick={() => {
-                playPopSound(650, 0.04);
-                onOpenResume();
-              }}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white text-xs font-semibold shadow-lg shadow-sky-500/20 hover:shadow-sky-500/40 transition-all duration-200 active:scale-95"
-              id="nav-resume-btn"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Resume</span>
-            </button>
           </div>
+        </div>
 
-          {/* Mobile Menu Button */}
-          <div className="flex items-center gap-2 md:hidden">
-            <button
-              onClick={() => {
-                playPopSound(600, 0.04);
-                onOpenResume();
-              }}
-              className="px-2.5 py-1.5 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-medium"
-            >
-              CV
-            </button>
-            <button
-              onClick={() => {
-                playPopSound(450, 0.03);
-                setMobileMenuOpen(!mobileMenuOpen);
-              }}
-              className="p-2 rounded-xl bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white"
-              aria-label="Toggle Menu"
-              id="mobile-menu-toggle"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
+        {/* Center: Role Switcher Tabs */}
+        <div className="hidden lg:flex items-center bg-zinc-900/90 p-1 rounded-2xl border border-white/10">
+          <button
+            onClick={() => handleRoleClick('seeker')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              currentRole === 'seeker'
+                ? 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>Job Seeker</span>
+            {appliedCount > 0 && (
+              <span className="w-4 h-4 rounded-full bg-white text-zinc-950 font-mono text-[10px] flex items-center justify-center font-bold">
+                {appliedCount}
+              </span>
+            )}
+          </button>
 
+          <button
+            onClick={() => handleRoleClick('employer')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              currentRole === 'employer'
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Briefcase className="w-3.5 h-3.5" />
+            <span>Employer Hub</span>
+          </button>
+
+          <button
+            onClick={() => handleRoleClick('admin')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              currentRole === 'admin'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Admin & Safety</span>
+          </button>
+        </div>
+
+        {/* Right Utility Buttons */}
+        <div className="flex items-center gap-2">
+          {/* AI Matcher Trigger */}
+          <button
+            onClick={onOpenAIMatcher}
+            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-500/20 to-purple-500/20 hover:from-sky-500/30 hover:to-purple-500/30 border border-sky-500/30 text-sky-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95"
+            title="Get AI Job Recommendations based on your free hours"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
+            <span className="hidden sm:inline">AI Shift Match</span>
+          </button>
+
+          {/* QuickShift Pass */}
+          <button
+            onClick={onOpenDigitalPass}
+            className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            title="View Your Digital ID Card for Store Walk-in"
+          >
+            <QrCode className="w-4 h-4 text-emerald-400" />
+            <span className="hidden sm:inline">Worker Pass</span>
+          </button>
+
+          {/* Profile Edit */}
+          <button
+            onClick={onOpenProfile}
+            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-400 hover:text-white transition-colors"
+            title="Profile & Preferences"
+          >
+            <User className="w-4 h-4" />
+          </button>
+
+          {/* Sound Toggle */}
+          <button
+            onClick={handleSoundToggle}
+            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-400 hover:text-white transition-colors"
+            title={soundOn ? 'Sound FX On' : 'Sound FX Muted'}
+          >
+            {soundOn ? <Volume2 className="w-4 h-4 text-sky-400" /> : <VolumeX className="w-4 h-4" />}
+          </button>
+
+          {/* Mobile Preview Frame Toggle */}
+          <button
+            onClick={onToggleMobileFrame}
+            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-400 hover:text-white transition-colors hidden sm:flex"
+            title={isMobileFrame ? 'Switch to Full Web View' : 'Preview as Mobile Phone App'}
+          >
+            {isMobileFrame ? <Monitor className="w-4 h-4 text-sky-400" /> : <Smartphone className="w-4 h-4" />}
+          </button>
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="md:hidden bg-[#0a0c13]/95 backdrop-blur-2xl border-b border-white/10 px-6 py-6 shadow-2xl overflow-hidden"
-          >
-            <div className="flex flex-col gap-3">
-              {navLinks.map((link) => (
-                <a
-                  key={link.id}
-                  href={link.href}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavClick(link.href);
-                  }}
-                  className="flex items-center justify-between py-2 text-base font-medium text-zinc-300 hover:text-sky-400 transition-colors border-b border-white/5"
-                >
-                  <span>{link.label}</span>
-                  <ArrowUpRight className="w-4 h-4 text-zinc-600" />
-                </a>
-              ))}
+      {/* Mobile Role Switcher Bar */}
+      <div className="flex lg:hidden items-center justify-between bg-zinc-900/90 p-1 rounded-xl border border-white/10 mt-2.5">
+        <button
+          onClick={() => handleRoleClick('seeker')}
+          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all text-center flex items-center justify-center gap-1 ${
+            currentRole === 'seeker'
+              ? 'bg-sky-500 text-white'
+              : 'text-zinc-400'
+          }`}
+        >
+          <span>Job Seeker</span>
+          {appliedCount > 0 && (
+            <span className="w-3.5 h-3.5 rounded-full bg-white text-zinc-950 font-mono text-[9px] flex items-center justify-center font-bold">
+              {appliedCount}
+            </span>
+          )}
+        </button>
 
-              <div className="pt-4 flex flex-col gap-3">
-                <a
-                  href={PERSONAL_INFO.github}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white text-sm font-medium flex items-center justify-center gap-2"
-                >
-                  <Github className="w-4 h-4 text-sky-400" />
-                  GitHub Profile (@mvjayanna209)
-                </a>
+        <button
+          onClick={() => handleRoleClick('employer')}
+          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all text-center ${
+            currentRole === 'employer'
+              ? 'bg-emerald-500 text-white'
+              : 'text-zinc-400'
+          }`}
+        >
+          Employer
+        </button>
 
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onOpenResume();
-                  }}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20"
-                >
-                  <FileText className="w-4 h-4" />
-                  View & Download Resume
-                </button>
-
-                <div className="flex items-center justify-between px-2 text-xs font-mono text-zinc-400">
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-sky-400" />
-                    {timeString}
-                  </span>
-                  <button
-                    onClick={handleSoundToggle}
-                    className="flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-zinc-800 border border-white/10"
-                  >
-                    {soundActive ? <Volume2 className="w-3.5 h-3.5 text-sky-400" /> : <VolumeX className="w-3.5 h-3.5" />}
-                    <span>{soundActive ? 'Sound On' : 'Muted'}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <button
+          onClick={() => handleRoleClick('admin')}
+          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all text-center ${
+            currentRole === 'admin'
+              ? 'bg-purple-600 text-white'
+              : 'text-zinc-400'
+          }`}
+        >
+          Admin
+        </button>
+      </div>
     </header>
   );
 }
