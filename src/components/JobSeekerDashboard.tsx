@@ -23,7 +23,10 @@ import {
   Package,
   Shield,
   PartyPopper,
-  Headset
+  Headset,
+  Smartphone,
+  Mail,
+  LogIn
 } from 'lucide-react';
 import { 
   Job, 
@@ -31,7 +34,8 @@ import {
   JobApplication, 
   JobCategory, 
   ShiftTiming, 
-  IndianCity 
+  IndianCity,
+  AuthUser 
 } from '../types';
 import { CATEGORIES_DATA, CITIES_CONFIG } from '../data/mockJobs';
 import JobCard from './JobCard';
@@ -50,6 +54,8 @@ interface JobSeekerDashboardProps {
   onSelectJob: (job: Job) => void;
   onOpenAIMatcher: () => void;
   onOpenDigitalPass: () => void;
+  authUser?: AuthUser | null;
+  onOpenLogin?: () => void;
 }
 
 export default function JobSeekerDashboard({
@@ -65,6 +71,8 @@ export default function JobSeekerDashboard({
   onSelectJob,
   onOpenAIMatcher,
   onOpenDigitalPass,
+  authUser,
+  onOpenLogin,
 }: JobSeekerDashboardProps) {
   const [activeTab, setActiveTab] = useState<'shifts' | 'applications' | 'saved'>('shifts');
   const [searchQuery, setSearchQuery] = useState('');
@@ -140,6 +148,39 @@ export default function JobSeekerDashboard({
 
   return (
     <div className="space-y-6">
+      {/* Guest Login Callout Banner */}
+      {!authUser && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-950/70 via-zinc-900 to-indigo-950/70 border border-sky-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-sky-500/20">
+              <Smartphone className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs font-bold text-white">
+                  Log in with Mobile Number (+91 SMS OTP) or Email
+                </h4>
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold">
+                  Recommended
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400 mt-0.5">
+                Save your candidate profile, unlock 1-click applications, and generate your verified Digital Worker ID Pass.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onOpenLogin}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs whitespace-nowrap shadow-lg shadow-sky-500/25 active:scale-95 transition-all flex items-center gap-1.5"
+          >
+            <LogIn className="w-3.5 h-3.5" />
+            <span>Sign In / Register</span>
+          </button>
+        </div>
+      )}
+
       {/* Hero Welcome Banner */}
       <div className="relative rounded-3xl bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-zinc-950 p-6 sm:p-8 border border-white/10 shadow-xl overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />

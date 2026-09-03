@@ -12,9 +12,15 @@ import {
   User, 
   Briefcase, 
   ShieldCheck,
-  ChevronDown
+  ChevronDown,
+  LogIn,
+  LogOut,
+  Mail,
+  Phone,
+  CheckCircle2,
+  Lock
 } from 'lucide-react';
-import { UserRole, IndianCity } from '../types';
+import { UserRole, IndianCity, AuthUser } from '../types';
 import { CITIES_CONFIG } from '../data/mockJobs';
 import { playPopSound, toggleSound, isSoundEnabled } from '../utils/audio';
 
@@ -31,6 +37,9 @@ interface NavbarProps {
   appliedCount: number;
   isMobileFrame: boolean;
   onToggleMobileFrame: () => void;
+  authUser: AuthUser | null;
+  onOpenLogin: () => void;
+  onLogout: () => void;
 }
 
 export default function Navbar({
@@ -46,9 +55,13 @@ export default function Navbar({
   appliedCount,
   isMobileFrame,
   onToggleMobileFrame,
+  authUser,
+  onOpenLogin,
+  onLogout,
 }: NavbarProps) {
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
   const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   const handleSoundToggle = () => {
     const nextState = toggleSound();
@@ -225,6 +238,118 @@ export default function Navbar({
           >
             {isMobileFrame ? <Monitor className="w-4 h-4 text-sky-400" /> : <Smartphone className="w-4 h-4" />}
           </button>
+
+          {/* Authentication State: User Menu or Login Button */}
+          {authUser ? (
+            <div className="relative">
+              <button
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
+                className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 border border-white/15 transition-all text-xs text-white group shadow-md"
+              >
+                <div className="relative">
+                  <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xs">
+                    {authUser.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 absolute -bottom-0.5 -right-0.5 ring-2 ring-zinc-950" />
+                </div>
+                <div className="flex flex-col text-left hidden sm:flex">
+                  <span className="font-semibold text-xs text-zinc-200 group-hover:text-white leading-tight">
+                    {authUser.name.split(' ')[0]}
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-mono leading-tight">
+                    {authUser.loginMethod === 'mobile' ? `+91 ${authUser.phone?.slice(-4)}` : authUser.email?.split('@')[0]}
+                  </span>
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+              </button>
+
+              {/* User Dropdown Menu */}
+              {showUserDropdown && (
+                <div className="absolute top-full right-0 mt-2 w-72 rounded-2xl bg-zinc-900 border border-white/15 p-3 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  {/* User Profile Header */}
+                  <div className="p-2.5 rounded-xl bg-zinc-950 border border-white/10 mb-2.5">
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-sm">
+                        {authUser.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-xs text-white truncate">{authUser.name}</span>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        </div>
+                        <span className="text-[10px] font-mono text-zinc-400 block truncate">
+                          {authUser.loginMethod === 'mobile' ? `📱 +91 ${authUser.phone}` : `✉️ ${authUser.email}`}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between pt-1.5 border-t border-white/10 text-[10px]">
+                      <span className="text-zinc-400">Signed in via:</span>
+                      <span className="font-mono text-sky-300 font-semibold uppercase">
+                        {authUser.loginMethod === 'mobile' ? 'Mobile OTP' : 'Email'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="space-y-1 text-xs">
+                    <button
+                      onClick={() => {
+                        setShowUserDropdown(false);
+                        onOpenDigitalPass();
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-zinc-300 hover:bg-zinc-800 flex items-center gap-2 transition-colors"
+                    >
+                      <QrCode className="w-4 h-4 text-emerald-400" />
+                      <span>My Digital Worker Pass</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowUserDropdown(false);
+                        onOpenProfile();
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-zinc-300 hover:bg-zinc-800 flex items-center gap-2 transition-colors"
+                    >
+                      <User className="w-4 h-4 text-sky-400" />
+                      <span>Edit Profile & Shift Times</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowUserDropdown(false);
+                        onOpenLogin();
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-zinc-300 hover:bg-zinc-800 flex items-center gap-2 transition-colors"
+                    >
+                      <Lock className="w-4 h-4 text-indigo-400" />
+                      <span>Switch / Log In Another Account</span>
+                    </button>
+
+                    <div className="pt-1 border-t border-white/10">
+                      <button
+                        onClick={() => {
+                          setShowUserDropdown(false);
+                          onLogout();
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-500/10 flex items-center gap-2 transition-colors font-medium"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={onOpenLogin}
+              className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-600 to-purple-600 hover:from-sky-400 hover:to-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-sky-500/25 transition-all active:scale-95"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Log In / Sign In</span>
+            </button>
+          )}
         </div>
       </div>
 

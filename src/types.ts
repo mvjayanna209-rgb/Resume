@@ -118,6 +118,19 @@ export interface AdminStats {
   fraudAlertsCount: number;
 }
 
+export interface AuthUser {
+  id: string;
+  name: string;
+  loginMethod: 'mobile' | 'email';
+  phone?: string;
+  email?: string;
+  role: UserRole;
+  isVerified: boolean;
+  city: IndianCity;
+  locality: string;
+  createdAt?: string;
+}
+
 // Backward-compatible types for portfolio components
 export interface Project {
   [key: string]: any;

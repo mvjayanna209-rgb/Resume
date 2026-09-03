@@ -4,7 +4,8 @@ import {
   Job, 
   JobApplication, 
   JobSeekerProfile, 
-  IndianCity 
+  IndianCity,
+  AuthUser 
 } from './types';
 import { 
   INITIAL_JOBS, 
@@ -21,6 +22,7 @@ import AIJobMatcherModal from './components/AIJobMatcherModal';
 import DigitalPassModal from './components/DigitalPassModal';
 import ProfileModal from './components/ProfileModal';
 import PostJobModal from './components/PostJobModal';
+import LoginModal from './components/LoginModal';
 import { playSuccessSound, playPopSound } from './utils/audio';
 
 export default function App() {
@@ -45,6 +47,27 @@ export default function App() {
     return saved ? JSON.parse(saved) : ['qs-1', 'qs-3'];
   });
 
+  const [authUser, setAuthUser] = useState<AuthUser | null>(() => {
+    const saved = localStorage.getItem('quickshift_auth');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+    return {
+      id: 'seeker-vijay',
+      name: 'Vijay Kumar',
+      loginMethod: 'mobile',
+      phone: '9886012345',
+      email: 'vijay.k@gmail.com',
+      role: 'seeker',
+      isVerified: true,
+      city: 'Bengaluru',
+      locality: 'Koramangala 5th Block',
+      createdAt: '2026-03-01',
+    };
+  });
+
   const [currentRole, setCurrentRole] = useState<UserRole>('seeker');
   const [currentCity, setCurrentCity] = useState<IndianCity>('Bengaluru');
   const [currentLocality, setCurrentLocality] = useState<string>('Koramangala 5th Block');
@@ -56,6 +79,7 @@ export default function App() {
   const [isDigitalPassOpen, setIsDigitalPassOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isPostJobOpen, setIsPostJobOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Sync to localStorage
@@ -75,11 +99,45 @@ export default function App() {
     localStorage.setItem('quickshift_saved_jobs', JSON.stringify(savedJobIds));
   }, [savedJobIds]);
 
+  useEffect(() => {
+    if (authUser) {
+      localStorage.setItem('quickshift_auth', JSON.stringify(authUser));
+    } else {
+      localStorage.removeItem('quickshift_auth');
+    }
+  }, [authUser]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
     }, 4000);
+  };
+
+  const handleLogin = (user: AuthUser) => {
+    setAuthUser(user);
+    setCurrentRole(user.role);
+    if (user.city) setCurrentCity(user.city);
+    if (user.locality) setCurrentLocality(user.locality);
+
+    if (user.role === 'seeker') {
+      setSeekerProfile(prev => ({
+        ...prev,
+        name: user.name,
+        phone: user.phone || prev.phone,
+        email: user.email || prev.email,
+        city: user.city || prev.city,
+        locality: user.locality || prev.locality,
+      }));
+    }
+
+    const identifier = user.loginMethod === 'mobile' ? `📱 +91 ${user.phone}` : `✉️ ${user.email}`;
+    showToast(`Welcome, ${user.name}! Signed in via ${identifier}`);
+  };
+
+  const handleLogout = () => {
+    setAuthUser(null);
+    showToast('Signed out. You can browse shifts as a guest or log in anytime.');
   };
 
   // Handlers
@@ -93,6 +151,13 @@ export default function App() {
   };
 
   const handleApply = (job: Job, note?: string) => {
+    // Check if user is logged in
+    if (!authUser) {
+      setIsLoginOpen(true);
+      showToast('Please sign in with Mobile Number or Email to submit your application');
+      return;
+    }
+
     // Check if already applied
     if (applications.some(a => a.jobId === job.id)) {
       showToast('You have already applied for this shift!');
@@ -180,6 +245,9 @@ export default function App() {
         appliedCount={applications.length}
         isMobileFrame={isMobileFrame}
         onToggleMobileFrame={() => setIsMobileFrame(!isMobileFrame)}
+        authUser={authUser}
+        onOpenLogin={() => setIsLoginOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Area: Responsive standard or realistic Mobile Container */}
@@ -198,6 +266,8 @@ export default function App() {
             onSelectJob={(job) => setSelectedJobForDetail(job)}
             onOpenAIMatcher={() => setIsAIMatcherOpen(true)}
             onOpenDigitalPass={() => setIsDigitalPassOpen(true)}
+            authUser={authUser}
+            onOpenLogin={() => setIsLoginOpen(true)}
           />
         )}
 
@@ -278,6 +348,13 @@ export default function App() {
         onClose={() => setIsPostJobOpen(false)}
         onAddJob={handleAddJob}
         currentCity={currentCity}
+      />
+
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+        onLogin={handleLogin}
+        defaultRole={currentRole}
       />
     </div>
   );
